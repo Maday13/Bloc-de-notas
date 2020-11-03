@@ -1,6 +1,7 @@
 package com.example.blocdenotas;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.Menu;
@@ -96,14 +97,44 @@ public class AgregarNota extends AppCompatActivity
                 msj = "INGRESE UN TITULO";
                 TITLE.requestFocus();
                 Mensaje(msj);
+            }else{
+                if(content.equals("")){
+                    msj = "INGRESE LA NOTA";
+                    CONTENT.requestFocus();
+                    Mensaje(msj);
+                }else{
+                    Cursor c = DB.getNote(title);
+                    String getTitle = "";
+                    if(c.moveToFirst()){
+                        do{
+                            getTitle = c.getString(1);
+                        }while(c.moveToNext());
+                    }
+                    if(getTitle.equals(title)){
+                        TITLE.requestFocus();
+                        msj = "EL TITULO YA EXISTE";
+                        Mensaje(msj);
+                    }else{
+                        DB.addNote(title,content);
+                        actividad(title,content);
+                    }
+                }
             }
-        }
+        }else{
 
+        }
     }
 
     public void Mensaje (String msj){
         Toast toast = Toast.makeText(this, msj, Toast.LENGTH_SHORT);
         toast.setGravity(Gravity.CENTER_VERTICAL,0,0);
         toast.show();
+    }
+
+    public void actividad(String title, String content){
+        Intent intent = new Intent(AgregarNota.this, VerNota.class);
+        intent.putExtra("title", title);
+        intent.putExtra("content", content);
+        startActivity(intent);
     }
 }

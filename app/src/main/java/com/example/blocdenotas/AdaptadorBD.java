@@ -2,6 +2,7 @@ package com.example.blocdenotas;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.widget.Toast;
@@ -21,10 +22,9 @@ public class AdaptadorBD extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE "+TABLE+" ("+
-                TABLE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "+
-                TITLE +" TEXT, "+CONTENT+" TEXT)");
-
+        db.execSQL("CREATE TABLE " + TABLE + " (" +
+                TABLE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                TITLE + " TEXT," + CONTENT + " TEXT)");
     }
 
     @Override
@@ -38,5 +38,14 @@ public class AdaptadorBD extends SQLiteOpenHelper {
         valores.put(TITLE, title);
         valores.put(CONTENT, content);
         this.getWritableDatabase().insert(TABLE, null, valores);
+    }
+
+    public Cursor getNote(String condition){
+        String columnas[] = {TABLE_ID, TITLE, CONTENT};
+        String args[] = new String[]{condition};
+        Cursor c = this.getReadableDatabase().query(TABLE,
+                columnas, TITLE+"=?",args,
+                null, null,null);
+        return c;
     }
 }
