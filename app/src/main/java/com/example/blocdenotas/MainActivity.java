@@ -73,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
 
             case DELETE:
                 return true;
-
             case EXIST:
                 finish();
                 return true;
