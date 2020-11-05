@@ -121,7 +121,25 @@ public class AgregarNota extends AppCompatActivity
                 }
             }
         }else{
-
+            if(type.equals("edit")){
+                Add.setText("Update nota");
+                if(title.equals("")){
+                    msj = "Ingrese un titulo";
+                    TITLE.requestFocus();
+                    Mensaje(msj);
+                }
+                else{
+                    if(content.equals("")){
+                        msj = "Ingrese la nota";
+                        CONTENT.requestFocus();
+                        Mensaje(msj);
+                    }
+                    else{
+                        DB.updateNote(title, content, getTitle);
+                        actividad(title, content);
+                    }
+                }
+            }
         }
     }
 

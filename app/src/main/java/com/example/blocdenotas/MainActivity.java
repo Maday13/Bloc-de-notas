@@ -1,17 +1,24 @@
 package com.example.blocdenotas;
 
 
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-
+import android.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -24,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     AdaptadorBD DB;
     List<String> item = null;
     String getTitle;
+    AlertDialog alerta;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +42,14 @@ public class MainActivity extends AppCompatActivity {
 
         textLista = (TextView)findViewById(R.id.textView_Lista);
         lista = (ListView)findViewById(R.id.listView_Lista);
-
+        lista.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                getTitle = (String) lista.getItemAtPosition(i);
+                alert("list");
+            }
+        });
+        showNotes();
     }
 
 
@@ -72,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
 
             case DELETE:
+                alert("deletes");
                 return true;
             case EXIST:
                 finish();
@@ -80,6 +96,36 @@ public class MainActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void showNotes(){
+        DB = new AdaptadorBD(this);
+        Cursor c = DB.getNotes();
+        item = new ArrayList<String>();
+        String title = "";
+        if(c.moveToFirst() == false){
+            textLista.setText("No hay notas");
+        }
+        else {
+            do{
+                title = c.getString(1);
+                item.add(title);
+            }while(c.moveToNext());
+        }
+        ArrayAdapter<String> adaptador = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, item);
+        lista.setAdapter(adaptador);
+    }
+
+    public String getNote(){
+        String type = "", content = "";
+        DB = new AdaptadorBD(this);
+        Cursor c = DB.getNote(getTitle);
+        if(c.moveToFirst()){
+            do{
+                content = c.getString(2);
+            }while(c.moveToNext());
+        }
+        return content;
     }
 
     public void actividad (String act)
@@ -91,6 +137,88 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this,AgregarNota.class);
             intent.putExtra("type",type);
             startActivity(intent);
+        }
+        else{
+            if(act.equals("edit")){
+                type = "edit";
+                content = getNote();
+                Intent intent = new Intent(MainActivity.this, AgregarNota.class);
+                intent.putExtra("type", type);
+                intent.putExtra("title", getTitle);
+                intent.putExtra("content", content);
+                startActivity(intent);
+            }
+            else{
+                if(act.equals("see")){
+                    content = getNote();
+                    Intent intent = new Intent(MainActivity.this, VerNota.class);
+                    intent.putExtra("title", getTitle);
+                    intent.putExtra("content", content);
+                    startActivity(intent);
+                }
+            }
+        }
+    }
+
+    private void alert(String f){
+        AlertDialog alerta;
+        alerta = new AlertDialog.Builder(this).create();
+        if(f.equals("list")){
+            alerta.setTitle("The title of the note: " +getTitle);
+            alerta.setMessage("¿Que accion desea realizar?");
+            alerta.setButton("See note", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    actividad("see");
+                }
+            });
+            alerta.setButton2("Delete note", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    delete("delete");
+                    Intent intent = getIntent();
+                    startActivity(intent);
+                }
+            });
+            alerta.setButton3("Edit note", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    actividad("edit");
+                }
+            });
+        }
+        else{
+          if(f.equals("deletes")){
+              alerta.setTitle("Confirmation message");
+              alerta.setMessage("¿Que accion desea realizar?");
+              alerta.setButton("Cancel", new DialogInterface.OnClickListener() {
+                  @Override
+                  public void onClick(DialogInterface dialogInterface, int i) {
+                      return;
+                  }
+              });
+              alerta.setButton2("Delete notes", new DialogInterface.OnClickListener() {
+                  @Override
+                  public void onClick(DialogInterface dialogInterface, int i) {
+                      delete("deletes");
+                      Intent intent = getIntent();
+                      startActivity(intent);
+                  }
+              });
+          }
+        }
+        alerta.show();
+    }
+
+    private void delete(String f){
+        DB = new AdaptadorBD(this);
+        if(f.equals("delete")){
+            DB.deleteNote(getTitle);
+        }
+        else{
+            if(f.equals("deletes")){
+                 DB.deleteNotas();
+            }
         }
     }
 }
